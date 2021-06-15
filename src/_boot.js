@@ -30,6 +30,7 @@ if (!gotLock) {
 signale.time("Startup");
 
 const electron = require("electron");
+require('@electron/remote/main').initialize()
 const ipc = electron.ipcMain;
 const path = require("path");
 const url = require("url");
@@ -56,6 +57,11 @@ const innerFontsDir = path.join(__dirname, "assets/fonts");
 // See #222
 if (process.env.http_proxy) delete process.env.http_proxy;
 if (process.env.https_proxy) delete process.env.https_proxy;
+
+// Bypass GPU acceleration blocklist, trading a bit of stability for a great deal of performance, mostly on Linux
+app.commandLine.appendSwitch("ignore-gpu-blocklist");
+app.commandLine.appendSwitch("enable-gpu-rasterization");
+app.commandLine.appendSwitch("enable-video-decode");
 
 // Fix userData folder not setup on Windows
 try {
@@ -186,7 +192,7 @@ function createWindow(settings) {
         backgroundColor: '#000000',
         webPreferences: {
             devTools: true,
-            enableRemoteModule: true,
+	    enableRemoteModule: true,
             contextIsolation: false,
             backgroundThrottling: false,
             webSecurity: true,
@@ -227,7 +233,7 @@ app.on('ready', async () => {
     // See #366
     let cleanEnv = await require("shell-env")(settings.shell).catch(e => { throw e; });
 
-    Object.assign(cleanEnv, process.env, {
+    Object.assign(cleanEnv, {
         TERM: "xterm-256color",
         COLORTERM: "truecolor",
         TERM_PROGRAM: "eDEX-UI",
